@@ -99,3 +99,59 @@ Setup a reasonable gitignore file.
     ```
 
 6. **NOTE**: Every time we change requirements like adding new libraries via `poetry add`, we will need to recreate the above `requirements.txt` file.
+
+## Testing the Server Locally
+
+1. Let's test the server locally to see that everything's functional:
+
+    ```sh
+    poetry shell
+    python manage.py runserver
+    ```
+
+2. Navigate to <http://localhost:8000/> and you should see a default Django page.
+3. You can stop the local server with CTRL-C
+
+## Login to AWS
+
+1. [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+2. Configure SSO, choosing whatever details like default region, etc. you want:
+
+    ```sh
+    aws configure sso
+    ```
+
+3. Take note of the profile name that is returned. Example: `--profile AdministratorAccessManaged-2**********6`
+4. Login:
+
+    ```sh
+    aws sso login
+    ```
+
+## Create Elastic Beanstalk Application and Environment
+
+1. We need to create both an "application" as well as an "environment" on Elastic Beanstalk.
+2. Start by creating the application:
+
+    ```sh
+    eb init -p python-3.11 <app_name> --profile <profile_name> --region <region>
+    ```
+
+3. Creating the application is fairly quick and you can confirm via the AWS Management Console that it's been created.
+4. Run this once more to setup your local computer to communicate with this application:
+
+    ```sh
+    eb init --profile <profile_name> --region <region>
+    ```
+
+    Answer the following:
+      - Do you wish to continue with CodeCommit? No
+      - Do you want to set up SSH for your instances? Yes
+
+5. Now create the Elastic Beanstalk environment:
+
+    ```sh
+    eb create <environment_name> --profile <profile_name> --region <region>
+    ```
+
+6. Creating the environment can take a while.

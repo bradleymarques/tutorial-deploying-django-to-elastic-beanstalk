@@ -7,3 +7,8 @@ __pycache__
 __pycache__/
 .pytest_cache
 static/
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
