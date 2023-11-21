@@ -1,5 +1,6 @@
 # Hello World Django <!-- omit from toc -->
 
+- [Introduction](#introduction)
 - [Install Django and Create Project](#install-django-and-create-project)
 - [Gitignore](#gitignore)
 - [Setting up Pyenv](#setting-up-pyenv)
@@ -9,17 +10,19 @@
 - [Create Elastic Beanstalk Application and Environment](#create-elastic-beanstalk-application-and-environment)
 - [Creating Elastic Beanstalk Django Config](#creating-elastic-beanstalk-django-config)
 - [Setting Environment Variables](#setting-environment-variables)
+- [Creating a simple test webpage and ensuring database migrations](#creating-a-simple-test-webpage-and-ensuring-database-migrations)
 
-This simple project will guide you in building and deploying a Django application
-to [Amazon Elastic Beanstalk](https://aws.amazon.com/elasticbeanstalk/).
+## Introduction
+
+This simple project will guide you in building and deploying a Django application to [Amazon Elastic Beanstalk](https://aws.amazon.com/elasticbeanstalk/).
 
 We will use the following:
 
-1. Django
-2. Pyenv
-3. Poetry
-4. A simple SQLite database file
-5. Elastic Beanstalk
+1. **Django** as a web development framework
+2. **Pyenv** to manage our Python version
+3. **Poetry** to manage Python libraries
+4. A simple **SQLite** database file for now
+5. Elastic Beanstalk to host
 
 ## Install Django and Create Project
 
@@ -223,7 +226,7 @@ Setup a reasonable gitignore file.
     export DJANGO_SETTINGS_MODULE="hello_world_django.settings"
     export SECRET_KEY="secret-key-123"
     export DEBUG="True"
-    export ALLOWED_HOSTS=""
+    export ALLOWED_HOSTS="localhost"
     ```
 
 7. Alter the `hello_world_django/settings.py` file as such:
@@ -252,4 +255,120 @@ Setup a reasonable gitignore file.
     ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
     ```
 
-8.
+8. Get the value to set for ALLOWED_HOSTS by running `eb status` and copying the CNAME record.
+9. For the secret key, open up a django shell locally using `python manage.py shell` and run:
+
+    ```py
+    from django.core.management.utils import get_random_secret_key
+
+    print(get_random_secret_key())
+    ```
+
+10. Set the environment variables either through the AWS Web Console or the CLI (Note it is best to do this as 1 command as opposed to one command per environment variable, as each time they are altered the environment will need to restart):
+
+    ```sh
+    eb setenv DEBUG="True" SECRET_KEY="..." ALLOWED_HOSTS="..."
+    ```
+
+11. Redeploy to get the changes we made to the settings file: `eb deploy`
+12. Also make sure the local server still works: `python manage.py runserver`
+13. You should see the Django rocket ship both locally and on Elastic Beanstalk
+
+## Creating a simple test webpage and ensuring database migrations
+
+1. Create a simple django app by running `python manage.py startapp hello_world`.
+2. Create a new `View` in `hello_world/views.py`:
+
+    ```py
+    # hello_world/views.py`
+    from typing import Any, Dict
+
+    from django.contrib.auth.models import User
+    from django.views.generic import TemplateView
+
+
+    class HelloWorldView(TemplateView):
+        template_name = "hello_world/hello_world.html"
+
+        def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+            context = super().get_context_data(**kwargs)
+            context.update({"user_count": User.objects.count()})
+            return context
+    ```
+
+3. Add this to the app's `urls.py`:
+
+    ```py
+    # hello_world/urls.py
+    from django.urls import path
+
+    from hello_world.views import HelloWorldView
+
+    urlpatterns = [
+        path("", HelloWorldView.as_view(), name="hello-world"),
+    ]
+    ```
+
+4. Add the template (note the path here as you will need to create some sub folders):
+
+    ```html
+    <!-- hello_world/templates/hello_world/hello_world.html -->
+    <h1>Hello World</h1>
+    <p>There are {{ user_count }} users on this website</p>
+    ```
+
+5. Register the new app in our `INSTALLED_APPS` setting:
+
+    ```py
+    # hello_world_django/settings.py
+
+    INSTALLED_APPS = [
+        # ... other apps already listed here
+        "hello_world"
+    ]
+    ```
+
+6. Add the URLs to the base site URLs:
+
+    ```py
+    # hello_world_django/urls.py
+
+    from django.contrib import admin
+    from django.urls import include, path
+
+    urlpatterns = [
+        path("admin/", admin.site.urls),
+        path("", include("hello_world.urls")),
+    ]
+    ```
+
+7. Locally, run the server. You will likely get an `OperationalError at / no such table: auth_user`.
+8. This is because we have not migrated the database.
+9. Do that locally by stopping the server, then running `python manage.py migrate` and then running the server again.
+10. You should see "Hello World - There are 0 users on this website"
+11. We need to tell Elastic Beanstalk to perform the same database migration command every time we deploy.
+12. To do this, add the following to the `.ebextensions/django.config` file:
+
+    ```yml
+    packages:
+      yum:
+        git: []
+    option_settings:
+      aws:elasticbeanstalk:container:python:
+        WSGIPath: hello_world_django.wsgi:application
+      aws:elasticbeanstalk:application:environment:
+        DJANGO_SETTINGS_MODULE: hello_world_django.settings
+    container_commands:
+      01_migrate:
+        command: |
+          export $(cat /opt/elasticbeanstalk/deployment/env | xargs)
+          source $PYTHONPATH/activate
+          python ./manage.py migrate --noinput
+        leader_only: true
+    ```
+
+13. Some notes here:
+    - We prefix the command name with `01_` because we want it to run before some other commands we will add later
+    - The line `export ...` exports the Elastic Beanstalk environment variables to the process running the command
+    - We also add `--noinput` to the migration command to prevent it waiting for user input it will never receive
+14. Once these changes have been made, redeploy and you should (hopefully) see the same thing on Elastic Beanstalk as locally.

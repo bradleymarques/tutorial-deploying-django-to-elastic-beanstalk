@@ -11,6 +11,9 @@ Django = "^4.2.7"
 python-dotenv = "^1.0.0"
 
 
+[tool.poetry.group.dev.dependencies]
+djlint = "^1.34.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
