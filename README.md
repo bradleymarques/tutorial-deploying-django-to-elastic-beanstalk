@@ -1,5 +1,7 @@
 # Deploying a Django Application to Elastic Beanstalk <!-- omit from toc -->
 
+Up to date as of: **21 November 2023**
+
 - [Introduction](#introduction)
 - [Install Django and Create Project](#install-django-and-create-project)
 - [Gitignore](#gitignore)
