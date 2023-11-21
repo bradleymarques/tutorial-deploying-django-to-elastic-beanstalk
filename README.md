@@ -1,4 +1,13 @@
-# Hello World Django
+# Hello World Django <!-- omit from toc -->
+
+- [Install Django and Create Project](#install-django-and-create-project)
+- [Gitignore](#gitignore)
+- [Setting up Pyenv](#setting-up-pyenv)
+- [Setting up Poetry](#setting-up-poetry)
+- [Testing the Server Locally](#testing-the-server-locally)
+- [Login to AWS](#login-to-aws)
+- [Create Elastic Beanstalk Application and Environment](#create-elastic-beanstalk-application-and-environment)
+- [Creating Elastic Beanstalk Django Config](#creating-elastic-beanstalk-django-config)
 
 This simple project will guide you in building and deploying a Django application
 to [Amazon Elastic Beanstalk](https://aws.amazon.com/elasticbeanstalk/).
@@ -154,4 +163,34 @@ Setup a reasonable gitignore file.
     eb create <environment_name> --profile <profile_name> --region <region>
     ```
 
-6. Creating the environment can take a while.
+6. Creating the environment can take a while, and it will likely fail as there is more configuration we need to do.
+
+## Creating Elastic Beanstalk Django Config
+
+1. In the root of the project, create a new folder called `.ebextensions`, and in it a file called `django.config`.
+2. These files should be committed into version control
+3. In the `django.config` file, place the following contents:
+
+    ```yml
+    packages:
+      yum:
+        git: []
+    option_settings:
+      aws:elasticbeanstalk:container:python:
+        WSGIPath: hello_world_django.wsgi:application
+      aws:elasticbeanstalk:application:environment:
+        DJANGO_SETTINGS_MODULE: hello_world_django.settings
+    ```
+
+4. We tell Elastic Beanstalk to install Git, as well as where to find the Django WSGI (Web Server Gateway Interface) and the Django settings module to use.
+5. Now, redeploy by simply running:
+
+    ```sh
+    eb deploy
+    ```
+
+6. You can always monitor the status by running:
+
+    ```sh
+    eb status
+    ```
