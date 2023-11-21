@@ -1,4 +1,4 @@
-# Hello World Django <!-- omit from toc -->
+# Deploying a Django Application to Elastic Beanstalk <!-- omit from toc -->
 
 - [Introduction](#introduction)
 - [Install Django and Create Project](#install-django-and-create-project)
@@ -11,6 +11,7 @@
 - [Creating Elastic Beanstalk Django Config](#creating-elastic-beanstalk-django-config)
 - [Setting Environment Variables](#setting-environment-variables)
 - [Creating a simple test webpage and ensuring database migrations](#creating-a-simple-test-webpage-and-ensuring-database-migrations)
+- [Static Files and Django Compressor](#static-files-and-django-compressor)
 
 ## Introduction
 
@@ -23,6 +24,7 @@ We will use the following:
 3. **Poetry** to manage Python libraries
 4. A simple **SQLite** database file for now
 5. Elastic Beanstalk to host
+6. **Django-compressor** to compile sass into css
 
 ## Install Django and Create Project
 
@@ -372,3 +374,7 @@ Setup a reasonable gitignore file.
     - The line `export ...` exports the Elastic Beanstalk environment variables to the process running the command
     - We also add `--noinput` to the migration command to prevent it waiting for user input it will never receive
 14. Once these changes have been made, redeploy and you should (hopefully) see the same thing on Elastic Beanstalk as locally.
+
+## Static Files and Django Compressor
+
+TODO: COMPLETE THIS
