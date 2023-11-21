@@ -8,6 +8,7 @@
 - [Login to AWS](#login-to-aws)
 - [Create Elastic Beanstalk Application and Environment](#create-elastic-beanstalk-application-and-environment)
 - [Creating Elastic Beanstalk Django Config](#creating-elastic-beanstalk-django-config)
+- [Setting Environment Variables](#setting-environment-variables)
 
 This simple project will guide you in building and deploying a Django application
 to [Amazon Elastic Beanstalk](https://aws.amazon.com/elasticbeanstalk/).
@@ -194,3 +195,61 @@ Setup a reasonable gitignore file.
     ```sh
     eb status
     ```
+
+## Setting Environment Variables
+
+1. If you visit the environment now, it is likely that you will get a Django error page with the message "DisallowedHost Invalid HTTP_HOST header"
+2. This is because we need to amend the `ALLOWED_HOSTS` setting in the Django settings file (`hello_world_django/settings.py`).
+3. There are also other settings in the Django settings file that we should extract as environment variables, namely:
+    - `DJANGO_SETTINGS_MODULE`
+    - `SECRET_KEY`
+    - `DEBUG`
+    - `ALLOWED_HOSTS`
+4. To do this, let's install `python-dotenv` so we can use a `.env` file locally:
+
+    ```sh
+    poetry add python-dotenv
+    ```
+
+5. Remember that whenever we make changes here, we need to update the `requirements.txt` file:
+
+    ```sh
+    poetry export --without-hashes --format=requirements.txt > requirements.txt
+    ```
+
+6. Locally, create a `.env.example` file and `.env` (gitignored) file both with contents:
+
+    ```sh
+    export DJANGO_SETTINGS_MODULE="hello_world_django.settings"
+    export SECRET_KEY="secret-key-123"
+    export DEBUG="True"
+    export ALLOWED_HOSTS=""
+    ```
+
+7. Alter the `hello_world_django/settings.py` file as such:
+
+    ```py
+    import os
+
+    import dotenv
+
+    dotenv.load_dotenv()
+    from pathlib import Path
+
+    # Build paths inside the project like this: BASE_DIR / 'subdir'.
+    BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+    # Quick-start development settings - unsuitable for production
+    # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+
+    # SECURITY WARNING: keep the secret key used in production secret!
+    SECRET_KEY = os.environ.get("SECRET_KEY", None)
+
+    # SECURITY WARNING: don't run with debug turned on in production!
+    DEBUG = os.environ.get("DEBUG", "True") == "True"
+
+    ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
+    ```
+
+8.
