@@ -1,2 +1,17 @@
-<h1>Hello World</h1>
-<p>There are {{ user_count }} users on this website</p>
+{% load static %}
+{% load compress %}
+{% load bootstrap5 %}
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    {% compress css %}
+      <link rel="stylesheet" type="text/x-scss" href="{% static "hello_world/css/main.scss" %}" />
+    {% endcompress %}
+    {% bootstrap_javascript %}
+    <title>Hello World Django</title>
+  </head>
+  <body>
+    <h1 class="text-primary">Hello World</h1>
+    <a href="#" class="btn btn-primary">There are {{ user_count }} users on this website</a>
+  </body>
+</html>

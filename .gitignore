@@ -6,7 +6,7 @@ __pycache__
 **/__pycache__/**
 __pycache__/
 .pytest_cache
-static/
+collected_static_files/
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

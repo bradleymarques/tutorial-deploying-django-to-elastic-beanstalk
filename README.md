@@ -1,6 +1,6 @@
 # Deploying a Django Application to Elastic Beanstalk <!-- omit from toc -->
 
-Up to date as of: **21 November 2023**
+Up to date as of: **November 2023**
 
 - [Introduction](#introduction)
 - [Install Django and Create Project](#install-django-and-create-project)
@@ -26,7 +26,8 @@ We will use the following:
 3. **Poetry** to manage Python libraries
 4. A simple **SQLite** database file for now
 5. Elastic Beanstalk to host
-6. **Django-compressor** to compile sass into css
+6. Bootstrap 5.3 (source SCSS)
+7. **Django-compressor** and **django-libsass** to compile sass into css
 
 ## Install Django and Create Project
 
@@ -379,4 +380,64 @@ Setup a reasonable gitignore file.
 
 ## Static Files and Django Compressor
 
-TODO: COMPLETE THIS
+1. Let's assume that we want to use Bootstrap but apply some overrides like our own colors.
+2. To do this, we'll need to download the Bootstrap SCSS and use a tool to compile the SCSS into CSS.
+3. First, head over to [this URL](https://getbootstrap.com/docs/5.3/getting-started/download/#source-files) to download the source files of Bootstrap 5.3.2
+4. Once downloaded, extract it and copy the entire `scss` folder into a new folder in the project here:
+    - `hello_world/static/hello_world/css/bootstrap/scss`
+5. Now install `django-bootstrap-v5`, `django-compressor`, `django-libsass` and recreate the requirements.txt file:
+
+    ```sh
+    poetry add django-bootstrap-v5
+    poetry add django-compressor
+    poetry add django-libsass
+    poetry export --without-hashes --format=requirements.txt > requirements.txt
+    ```
+
+6. Follow the [install instructions for django-bootstrap-v5](https://django-bootstrap-v5.readthedocs.io/en/latest/installation.html)
+
+7. Follow the [install instructions for django-compressor](https://django-compressor.readthedocs.io/en/stable/quickstart.html)
+    - Add to `INSTALLED_APPS`
+    - Add `STATICFILES_FINDERS`
+    - Define `STATIC_URL = "static/"`
+    - Define `STATIC_ROOT = "collected_static_files/"`
+    - Define `COMPRESS_ROOT = STATIC_ROOT`
+
+8. Follow the install instructions for [django-libsass](https://github.com/torchbox/django-libsass):
+    - Add `COMPRESS_PRECOMPILERS`
+
+9. Create a new root theme scss file here: `hello_world/static/hello_world/css/main.scss`
+10. Place the following contents in the file to override Bootstrap's primary color with pure blue:
+
+    ```scss
+    $blue: #0000ff !default;
+
+    $primary: $blue !default;
+
+    @import "./bootstrap/scss/bootstrap";
+    ```
+
+11. Alter `hello_world.html` to contain:
+
+    ```html
+    {% load static %}
+    {% load compress %}
+    {% load bootstrap5 %}
+    <!DOCTYPE html>
+    <html lang="en-US">
+      <head>
+        {% compress css %}
+          <link rel="stylesheet" type="text/x-scss" href="{% static 'hello_world/css/main.scss' %}" />
+        {% endcompress %}
+        {% bootstrap_javascript %}
+        <title>Hello World Django</title>
+      </head>
+      <body>
+        <h1 class="text-primary">Hello World</h1>
+        <a href="#" class="btn btn-primary">There are {{ user_count }} users on this website</a>
+      </body>
+    </html>
+    ```
+
+12. Locally, run the server, and ensure that you see some very blue elements.
+13. Redeploy to Elastic Beanstalk: `eb deploy`
