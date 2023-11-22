@@ -14,6 +14,7 @@ Up to date as of: **November 2023**
 - [Setting Environment Variables](#setting-environment-variables)
 - [Creating a simple test webpage and ensuring database migrations](#creating-a-simple-test-webpage-and-ensuring-database-migrations)
 - [Static Files and Django Compressor](#static-files-and-django-compressor)
+- [Setting Debug to False](#setting-debug-to-false)
 
 ## Introduction
 
@@ -272,7 +273,7 @@ Setup a reasonable gitignore file.
 10. Set the environment variables either through the AWS Web Console or the CLI (Note it is best to do this as 1 command as opposed to one command per environment variable, as each time they are altered the environment will need to restart):
 
     ```sh
-    eb setenv DEBUG="True" SECRET_KEY="..." ALLOWED_HOSTS="..."
+    eb setenv DEBUG="True" SECRET_KEY="<enter-the-secret-key-here>" ALLOWED_HOSTS="<enter-the-CNAME-here>"
     ```
 
 11. Redeploy to get the changes we made to the settings file: `eb deploy`
@@ -442,3 +443,28 @@ Setup a reasonable gitignore file.
 12. Locally, run the server, and ensure that you see some very blue elements.
 13. Redeploy to Elastic Beanstalk: `eb deploy` and check Elastic Beanstalk
 14. It is likely you will see an error `*.css was blocked due to MIME type ("text/html") mismatch (X-Content-Type-Options: nosniff)`
+15. To resolve this (for debug mode at least), we need to let Django serve the static files. Change `hello_world/urls.py` to:
+
+    ```py
+    # hello_world/urls.py
+
+    from django.conf import settings # Add this
+    from django.conf.urls.static import static # Add this
+    from django.urls import path
+
+    from hello_world.views import HelloWorldView
+
+    urlpatterns = [
+        path("", HelloWorldView.as_view(), name="hello-world"),
+    ]
+
+    # Add this:
+    if settings.DEBUG:
+        urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    ```
+
+16. Redeploy and you should see the correct styling on the Elastic Beanstalk site.
+
+## Setting Debug to False
+
+TODO: CONTINUE
