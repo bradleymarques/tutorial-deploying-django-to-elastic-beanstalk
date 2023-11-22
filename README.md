@@ -440,4 +440,5 @@ Setup a reasonable gitignore file.
     ```
 
 12. Locally, run the server, and ensure that you see some very blue elements.
-13. Redeploy to Elastic Beanstalk: `eb deploy`
+13. Redeploy to Elastic Beanstalk: `eb deploy` and check Elastic Beanstalk
+14. It is likely you will see an error `*.css was blocked due to MIME type ("text/html") mismatch (X-Content-Type-Options: nosniff)`
